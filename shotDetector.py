@@ -44,6 +44,7 @@ def main():
         # Set current frame as previous frame.
         F_tm1 = F_t
 
+    # Plot graph
     plt.title("DFD* scores for clip 3")
     plt.ylabel("DFD*(t)")
     plt.xlabel("t")
