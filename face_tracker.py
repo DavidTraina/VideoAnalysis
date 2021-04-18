@@ -13,8 +13,8 @@ FACE_DETECTION_MODEL = "models/face_detection/res10_300x300_ssd_iter_140000.caff
 
 FACE_DETECTION_MODEL_CONFIG = "models/face_detection/deploy.prototxt.txt"
 NETWORK_INPUT_SIZE = 300, 300
-# Value from https://github.com/opencv/opencv/tree/master/samples/dnn
-BLOB_MEAN_SUBTRACTION: Color = Color(r=123, b=104, g=177)
+# Value from https://towardsdatascience.com/face-detection-models-which-to-use-and-why-d263e82c302c
+BLOB_MEAN_SUBTRACTION: Color = Color(r=123, b=104, g=117)
 
 
 class Face:
