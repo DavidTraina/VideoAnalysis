@@ -6,7 +6,7 @@ from sklearn.ensemble import AdaBoostClassifier
 
 from model import Box, Gender
 
-PATH = "/home/lawrence/420/project/VideoAnalysis/classifiers"
+PATH = "./classifiers"
 GCLF = None
 EYE = None
 MOUTH = None
@@ -34,7 +34,7 @@ def gender_faces(img: np.ndarray, face_boxes: List[Box]) -> List[Tuple[Gender, f
 
     :param img: The image
     :param face_boxes: The bounding boxes of the faces in img
-    :return: List of inferred genders parallel with face_boxes
+    :return: List of inferred genders and the confidence value parallel with face_boxes
     """
 
     if (GCLF == None):
@@ -75,7 +75,8 @@ def gender_faces(img: np.ndarray, face_boxes: List[Box]) -> List[Tuple[Gender, f
         X = np.concatenate((face.reshape(L*H*3), landmarks)).reshape(1,-1)
         y_prob = GCLF.predict_proba(X)[0]
         y_pred = GCLF.predict(X).astype(int)[0]
-        ret.append((y_pred, y_prob[y_pred]))
+
+        ret.append((Gender.MALE if y_pred == 1 else Gender.FEMALE, y_prob[y_pred]))
 
     return ret
 
