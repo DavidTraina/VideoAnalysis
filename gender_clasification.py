@@ -3,30 +3,14 @@ from typing import List
 import cv2
 import numpy as np
 from joblib import load
+from imutils import face_utils
 
 from model import Gender, Face, GenderedFace
 
-PATH = "./classifiers"
+PATH = "./gclf.model"
 GCLF = None
-EYE = None
-MOUTH = None
 H = 250
 L = 250
-
-
-def load_classifiers():
-    """
-    Loads AdaBoost Gender classifier and Haar Cascades feature classifiers
-    and stores them into global variables
-    """
-    global GCLF, EYE, MOUTH
-
-    GCLF = load(PATH + "/gclf.model")
-
-    EYE = cv2.CascadeClassifier()
-    MOUTH = cv2.CascadeClassifier()
-    EYE.load(PATH + "/haarcascade_eye.xml")
-    MOUTH.load(PATH + "/haarcascade_smile.xml")
 
 
 def gender_faces(img: np.ndarray, faces: List[Face]) -> List[GenderedFace]:
@@ -38,47 +22,46 @@ def gender_faces(img: np.ndarray, faces: List[Face]) -> List[GenderedFace]:
     :return: List of inferred genders and the confidence value parallel with face_boxes
     """
 
+    global GCLF
     if GCLF == None:
-        load_classifiers()
+        GCLF = load(PATH + "/gclf.model")
 
     ret = []
-    for box in face_boxes:
+    for face in faces:
+        box = face.box
+
         # Extract each face, and resize to (H,L)
         face = img[
             box.top_left_y : box.bottom_right_y, box.top_left_x : box.bottom_right_x, :
         ]
         face = cv2.resize(face, (H, L))
-        gray = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
 
-        # Find 8 landmarks. Set NOSE to default as Nose classifier is now defunct
-        # Values are found by averaging training data
-        landmarks = np.array([103, 147, 126, 126, 114, 114, 138, 160])
-
-        # Find eyes. If search fails, use defaults
+        # Extract features. If features are not found, use defaults.
+        feat = face_utils.shape_to_np(face.shape)
+        landmarks = np.zeros(8)
         try:
-            eyes = EYE.detectMultiScale(gray, 1.3, 5)
-            (lx, ly, lw, lh) = eyes[0]
-            landmarks[0] = lx + lw // 2
-            landmarks[4] = ly + lh // 2
-            (rx, ry, rw, rh) = eyes[1]
-            landmarks[1] = rx + rw // 2
-            landmarks[5] = ry + rh // 2
+            x = box.top_left_x
+            y = box.top_left_y
+            landmarks[0] = feat[3][0] - feat[2][0] - x
+            landmarks[1] = feat[1][0] - feat[0][0] - x
+            landmarks[2] = feat[4][0] - x
+            landmarks[3] = feat[4][0] - x
+            landmarks[4] = feat[3][1] - feat[2][1] - y
+            landmarks[5] = feat[1][1] - feat[0][1] - y
+            landmarks[6] = feat[4][1] - y - 5
+            landmarks[7] = feat[4][1] - y + 5
         except:
-            pass
-
-        # Find mouth. If search fails, use defaults
-        try:
-            mouth = MOUTH.detectMultiScale(gray, 1.7, 5)[0]
-            landmarks[3] = mouth[0] + mouth[2] // 2
-            landmarks[7] = mouth[1] + mouth[3] // 2
-        except:
-            pass
-
+            landmarks = np.array([103, 147, 126, 126, 114, 114, 138, 160])
+        
         # Classify
         X = np.concatenate((face.reshape(L * H * 3), landmarks)).reshape(1, -1)
         y_prob = GCLF.predict_proba(X)[0]
         y_pred = GCLF.predict(X).astype(int)[0]
 
-        ret.append((Gender.MALE if y_pred == 1 else Gender.FEMALE, y_prob[y_pred]))
+        # Create GenderedFace object
+        g_face = GenderedFace(face)
+        g_face.gender = Gender.MALE if y_pred == 1 else Gender.FEMALE
+        g_face.gender_confidence = y_prob[y_pred]
+        ret.append(g_face)
 
     return ret
