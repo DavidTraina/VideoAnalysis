@@ -7,7 +7,7 @@ from functools import cached_property
 class Gender(Enum):
     FEMALE = 0
     MALE = 1
-    UNKNOWN = 3
+    UNKNOWN = 2
 
 
 Point = namedtuple('Point', ['x', 'y'])
