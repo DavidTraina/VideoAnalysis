@@ -3,6 +3,9 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property
 
+import dlib
+import numpy as np
+
 
 class Gender(Enum):
     FEMALE = 0
@@ -20,13 +23,30 @@ class Box:
 
     @classmethod
     def from_points(cls, top_left, bottom_right):
-        return cls(top_left=top_left, bottom_right=bottom_right)
+        return cls.from_values(top_left.x, top_left.y, bottom_right.x, bottom_right.y)
 
     @classmethod
     def from_values(cls, top_left_x, top_left_y, bottom_right_x, bottom_right_y):
         return cls(
-            top_left=Point(x=top_left_x, y=top_left_y),
-            bottom_right=Point(x=bottom_right_x, y=bottom_right_y),
+            top_left=Point(x=round(top_left_x), y=round(top_left_y)),
+            bottom_right=Point(x=round(bottom_right_x), y=round(bottom_right_y)),
+        )
+
+    @classmethod
+    def from_dlib_rect(cls, dlib_rect: dlib.rectangle):
+        return cls.from_values(
+            top_left_x=round(dlib_rect.left()),
+            top_left_y=round(dlib_rect.top()),
+            bottom_right_x=round(dlib_rect.right()),
+            bottom_right_y=round(dlib_rect.bottom()),
+        )
+
+    def to_dlib_rect(self) -> dlib.rectangle:
+        return dlib.rectangle(
+            left=self.top_left.x,
+            top=self.top_left.y,
+            right=self.bottom_right.x,
+            bottom=self.bottom_right.y,
         )
 
     @property
@@ -88,3 +108,16 @@ class Color:
     @classmethod
     def yellow(cls) -> 'Color':
         return cls(r=255, g=255)
+
+
+@dataclass
+class Face:
+    box: Box
+    shape: dlib.full_object_detection  # from SHAPE_MODEL
+    descriptor: np.ndarray  # from RECOGNITION_MODEL
+
+
+@dataclass
+class GenderedFace(Face):
+    gender: Gender
+    gender_confidence: float
