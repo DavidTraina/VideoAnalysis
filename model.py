@@ -72,6 +72,11 @@ class Box:
             y=(self.top_left.y + self.bottom_right.y) / 2,
         )
 
+    def distance_to(self, other: 'Box') -> float:
+        return np.linalg.norm(
+            (self.center.x - other.center.x, self.center.y - other.center.y)
+        )
+
 
 @dataclass(frozen=True)
 class Color:
@@ -109,6 +114,10 @@ class Color:
     def yellow(cls) -> 'Color':
         return cls(r=255, g=255)
 
+    @classmethod
+    def orange(cls) -> 'Color':
+        return cls(r=255, g=69)
+
 
 @dataclass
 class Face:
@@ -121,3 +130,18 @@ class Face:
 class GenderedFace(Face):
     gender: Gender
     gender_confidence: float
+
+    @classmethod
+    def from_face(
+        cls,
+        face: Face,
+        gender: Gender = Gender.UNKNOWN,
+        gender_confidence: float = 0.5,
+    ):
+        return cls(
+            box=face.box,
+            shape=face.shape,
+            descriptor=face.descriptor,
+            gender=gender,
+            gender_confidence=gender_confidence,
+        )

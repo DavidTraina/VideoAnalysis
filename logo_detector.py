@@ -1,5 +1,5 @@
+import datetime
 import os
-import time
 from typing import Iterator, Tuple, Iterable
 
 import cv2 as cv
@@ -114,8 +114,10 @@ class TemplateDetector:
 
 def run_template_detector(logo_path: str, clip_dir: str, out_base_dir: str) -> None:
     detector = TemplateDetector(template=cv.imread(logo_path), max_matches=1)
-    out_dir = f'{out_base_dir}{round(time.time())}/'
-    os.mkdir(out_dir)
+    out_dir: str = os.path.join(
+        out_base_dir, datetime.datetime.now().strftime('%m-%d-%Y__%H-%M-%S')
+    )
+    os.makedirs(out_dir)
     # noinspection PyTypeChecker
     dir_iter: Iterator[os.DirEntry] = os.scandir(clip_dir)
     for img_dir_entry in dir_iter:

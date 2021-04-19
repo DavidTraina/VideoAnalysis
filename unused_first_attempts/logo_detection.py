@@ -95,8 +95,6 @@ def find_object_corners(
         # print(f'Need at least 3 matches to locate object. Only found {len(matches)}')
         return None, None
 
-    # todo EXPERIMENTAL:
-    matches = matches[:3]
 
     # 'Ptr<cv::UMat>' is functionally equivalent to np.float32() https://stackoverflow.com/a/55815108
     src_pts = np.float32([obj_keypoints[m.queryIdx].pt for m in matches]).reshape(
