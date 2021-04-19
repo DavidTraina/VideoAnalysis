@@ -4,7 +4,7 @@ import numpy as np
 import os
 import argparse
 
-PATH = "/home/lawrence/420/project/clip_1"
+PATH = "./clip_1"
 OFFSET = 22
 THRESHOLD = 800
 
